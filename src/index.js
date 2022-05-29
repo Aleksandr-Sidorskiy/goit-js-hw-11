@@ -1,17 +1,16 @@
 import { Notify } from "notiflix";
 import fetchImages from "./js/fetch";
-// Описан в документации
 import SimpleLightbox from "simplelightbox";
-// Дополнительный импорт стилей
 import "simplelightbox/dist/simple-lightbox.min.css";
-import "../src/sass/main.scss"
+import "../src/sass/main.scss";
+import cardTemplate from  "./js/templade.hbs"
+// import axios from "axios";
 
-const { searchForm, gallery, loadMoreBtn, endCollectionText, cardHeight } = {
+const { searchForm, gallery, loadMoreBtn, endCollectionText } = {
   searchForm: document.querySelector('.search-form'),
   gallery: document.querySelector('.gallery'),
   loadMoreBtn: document.querySelector('.load-more'),
     endCollectionText: document.querySelector('.end-collection-text'),
-  cardHeight: document.querySelector('.gallery'),
 };
 
 searchForm.addEventListener('submit', onSubmitSearchForm);
@@ -23,26 +22,26 @@ function renderCardImage(arr) {
 }
 
 // Шаблон
-function cardTemplate() {
-    return `
-    <div class="photo-card">
-  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-  <div class="info">
-    <p class="info-item">
-      <b>${likes}</b>
-    </p>
-    <p class="info-item">
-      <b>${views}</b>
-    </p>
-    <p class="info-item">
-      <b>${comments}</b>
-    </p>
-    <p class="info-item">
-      <b>${downloads}</b>
-    </p>
-  </div>
-</div>`
-}
+// function cardTemplate() {
+//     return `
+//     <div class="photo-card">
+//   <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+//   <div class="info">
+//     <p class="info-item">
+//       <b>${likes}</b>
+//     </p>
+//     <p class="info-item">
+//       <b>${views}</b>
+//     </p>
+//     <p class="info-item">
+//       <b>${comments}</b>
+//     </p>
+//     <p class="info-item">
+//       <b>${downloads}</b>
+//     </p>
+//   </div>
+// </div>`
+// }
 
 let lightbox = new SimpleLightbox('.photo-card a', {
   captions: true,
@@ -54,7 +53,7 @@ let currentPage = 1;
 let currentHits = 0;
 let searchQuery = '';
 
-function onSubmitSearchForm(evt) {
+async function  onSubmitSearchForm(evt) {
     evt.preventDefault();
     searchQuery = evt.currentTarget.searchQuery.value;
     currentPage = 1;
@@ -62,7 +61,7 @@ function onSubmitSearchForm(evt) {
     if (searchQuery === '') {
         return;
     }
-    const response =  fetchImages(searchQuery, currentPage);
+    const response = await fetchImages(searchQuery, currentPage);
     currentHits = response.hits.length;
     
     if (response.totalHits > 40) {
@@ -71,13 +70,15 @@ function onSubmitSearchForm(evt) {
     
     try {
         if (response.totalHits > 0) {
-            Notify.failure(`Hooray! We found ${response.totalHits} images.`);
+            Notify.success(`Hooray! We found ${response.totalHits} images.`);
             gallery.innerHTML = '';
             renderCardImage(response.hits);
             lightbox.refresh();
             endCollectionText.classList.add('is-hidden');
             
-            cardHeight.firstElementChild.getBoundingClientRect();
+            const { height: cardHeight } = document
+            .querySelector(".gallery")
+            .firstElementChild.getBoundingClientRect();
             
             window.scrollBy({
             top: cardHeight * -100,
